@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -68,16 +69,8 @@ public class ResumeParserProgram {
 		}
 	}
 
-	public static JSONObject loadGateAndAnnie(File file) throws GateException,
+	public static JSONObject loadGateAndAnnie(File file, Annie annie) throws GateException,
 			IOException {
-		Out.prln("Initialising basic system...");
-		Gate.init();
-		Out.prln("...basic system initialised");
-
-		// initialise ANNIE (this may take several minutes)
-		Annie annie = new Annie();
-		annie.initAnnie();
-
 		// create a GATE corpus and add a document for each command-line
 		// argument
 		Corpus corpus = Factory.newCorpus("Annie corpus");
@@ -243,32 +236,44 @@ public class ResumeParserProgram {
 	}
 
 	public static void main(String[] args) {
-		if (args.length == 0) {
+		if (args.length < 2) {
 			System.err
-					.println("USAGE: java ResumeParser <inputfile> <outputfile>");
+					.println("USAGE: java ResumeParser <inputpath> <outputfile>");
 			return;
 		}
-		String inputFileName = args[0];
-		String outputFileName = (args.length == 2) ? args[1]
-				: "parsed_resume.json";
+		String inputPath = args[0];
+		String outputPath = args[1];
 
+		Annie annie = null;
 		try {
-			File tikkaConvertedFile = parseToHTMLUsingApacheTikka(inputFileName);
-			if (tikkaConvertedFile != null) {
-				JSONObject parsedJSON = loadGateAndAnnie(tikkaConvertedFile);
-
-				Out.prln("Writing to output...");
-				FileWriter jsonFileWriter = new FileWriter(outputFileName);
-				jsonFileWriter.write(parsedJSON.toJSONString());
-				jsonFileWriter.flush();
-				jsonFileWriter.close();
-				Out.prln("Output written to file " + outputFileName);
-			}
-
+			Out.prln("Initialising basic system...");
+			Gate.init();
+			Out.prln("...basic system initialised");
+			// initialise ANNIE (this may take several minutes)
+			annie = new Annie();
+			annie.initAnnie();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			System.out.println("Sad Face :( .Something went wrong.");
 			e.printStackTrace();
+		}
+
+		for (File file : new File(inputPath).listFiles()) {
+			try {
+				File tikkaConvertedFile = parseToHTMLUsingApacheTikka(file.getAbsolutePath());
+				if (tikkaConvertedFile != null) {
+					JSONObject parsedJSON = loadGateAndAnnie(tikkaConvertedFile, annie);
+					String outputFileName = Paths.get(outputPath, file.getName() + ".json").toString();
+					Out.prln("Writing to output...");
+					FileWriter jsonFileWriter = new FileWriter(outputFileName);
+					jsonFileWriter.write(parsedJSON.toJSONString());
+					jsonFileWriter.flush();
+					jsonFileWriter.close();
+					Out.prln("Output written to file " + outputFileName);
+				}
+			} catch (Exception e) {
+				System.out.println("Sad Face :( .Something went wrong.");
+				e.printStackTrace();
+			}
 		}
 	}
 }
