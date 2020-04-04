@@ -48,23 +48,7 @@ import com.google.gson.JsonObject;
 public class ResumeParserProgram {
 	private static File parseToHTMLUsingApacheTikka(String file)
 			throws IOException, SAXException, TikaException {
-		// determine extension
-		String ext = FilenameUtils.getExtension(file);
-		String outputFileFormat = "";
-		// ContentHandler handler;
-		if (ext.equalsIgnoreCase("html") | ext.equalsIgnoreCase("pdf")
-				| ext.equalsIgnoreCase("doc") | ext.equalsIgnoreCase("docx")) {
-			outputFileFormat = ".html";
-			// handler = new ToXMLContentHandler();
-		} else if (ext.equalsIgnoreCase("txt") | ext.equalsIgnoreCase("rtf")) {
-			outputFileFormat = ".txt";
-		} else {
-			System.out.println("Input format of the file " + file
-					+ " is not supported.");
-			return null;
-		}
-		String OUTPUT_FILE_NAME = FilenameUtils.removeExtension(file)
-				+ outputFileFormat;
+		String OUTPUT_FILE_NAME = FilenameUtils.removeExtension(file) + ".html";
 		ContentHandler handler = new ToXMLContentHandler();
 		// ContentHandler handler = new BodyContentHandler();
 		// ContentHandler handler = new BodyContentHandler(
